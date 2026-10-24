@@ -1,42 +1,54 @@
 # PetVerse Simulator - Project Knowledge
 
-Owner: Pratik. Budget: Rs 0 (free tools only). Platform: browser, Android-first. Hosting: GitHub Pages (repo must stay PUBLIC - GitHub Free does not serve Pages for private repos).
+Agent-maintained project memory. Update after every verified milestone.
 
-## What this is
-Mobile-first 3D virtual pet simulator. Coins, collectible pets, egg hatching, upgrades, shop, progression, local saves. No backend, no accounts, no analytics.
+## Purpose
 
-## Stack (decided, do not change without owner approval)
-- Three.js 0.170 via CDN import map (jsdelivr). Zero build step. Vanilla ES modules. No npm dependencies, no frameworks, no bundler.
-- All tuning/balance numbers live in src/data/config.js (data-driven, pattern from TIDELINE).
-- Persistence (planned Phase 3): localStorage, versioned envelope {version, timestamp, state}, backup key, migration hook, autosave every 60s, offline progress on load. Pattern inspired by Meowniverse SaveManager - REIMPLEMENTED, never copied (no license there).
+Mobile-first 3D virtual pet browser game. Target: coins, collectible pets, egg hatching, upgrades, shops, progression, local saves. Budget: Rs 0. Free hosting on GitHub Pages. Owner works from an Android phone.
 
-## Research summary (done 2026-10, do not re-research)
-- Foundation reference: TIDELINE github.com/bridge-mind/tideline (MIT). Zero-build CDN structure, FSM, economy, data-driven config, DOM HUD. Adapt architecture, do not copy fishing gameplay.
-- Mobile touch pattern: MineWorld github.com/EVEDensity/MineWorld (MIT). Joystick/swipe/buttons + perf discipline (per-frame generation limits, fog, culling).
-- Save pattern: Meowniverse github.com/akash098p/Meowniverse (NO license file - reference only, never copy code).
-- Egg hatch pattern: cconsta1/tamagotchi (NO license file - study only; its robot model is CC0 from Quaternius/Tomas Laulhe).
-- NEVER copy code from: Petrix, Meowniverse, cconsta1/tamagotchi, goose-catch, ZigZag (copyleft). Only MIT sources may be adapted, with attribution.
+## Architecture
 
-## Performance rules (Android)
-- Cap devicePixelRatio at 2. Shadow map 1024. Procedural geometry first.
-- Any GLB asset under ~5MB, loaded lazily. One render loop, delta clamped at 0.05s.
+    index.html          - HUD markup, Three.js CDN import map
+    styles.css          - mobile-first HUD styling, safe-area insets
+    src/main.js         - wiring: state, UI, actions, autosave, render loop
+    src/data/config.js  - ALL balance numbers (single source of tuning)
+    src/core/bus.js     - event bus (on/emit)
+    src/state/fsm.js    - idle/acting state machine, blocks overlapping actions
+    src/state/save.js   - versioned save envelope, primary+backup keys, injected storage
+    src/gameplay/petStats.js - pure stat math: clamp, decay, effects, offline
+    src/render/scene.js - Three.js scene, drag-to-orbit camera rig, resize
+    src/render/pet.js   - procedural pet (no assets), hop w/ squash-stretch
 
-## Asset policy
-- Primary sources CC0 only: Kenney (kenney.nl), Quaternius (quaternius.com), Poly Haven (polyhaven.com).
-- game-icons.net is CC BY 4.0 - needs a credit line. Poly Pizza / Freesound: check per-item license.
-- Keep CREDITS.md updated whenever an external asset is added.
+Key decisions:
+- Zero build step: Three.js via CDN import map, vanilla ES modules.
+- Save format: {version, timestamp, state{coins, stats}}; version 1; refuse future versions; backup key holds previous good save.
+- Decay rates: hunger 4/h, happiness 3/h, energy 2/h (real time, applied offline on load).
+- Config-driven balance; logic modules are dependency-free for headless testing.
 
-## Pipeline notes (Vibe agent)
-- Push via github_app.push_files with in-memory content in one commit. NEVER round-trip content through jq or tools.file_system read/write (UTF-8 mojibake risk). Keep file content ASCII-only.
-- Syntax check JS before push: strip import lines, then new Function(body) parse.
-- Repo creation and Pages enabling are manual owner steps (GitHub App lacks those permissions).
-- Report format after each task: DONE / FILES / TESTS / NOT VERIFIED / NEXT ACTION in simple Hinglish. Never claim untested behavior works.
+## Commands
 
-## Roadmap
-- Phase 0: skeleton + deploy (index.html, styles.css, src/main.js). DONE.
-- Phase 1: core shell - camera rig, explicit FSM (menu, idle, interacting, shop, hatching), tiny event bus.
-- Phase 2: pet stats (hunger, happiness, energy) + feed/play/clean actions, tap interactions.
-- Phase 3: SaveManager (versioned localStorage, backup key, migration, autosave 60s, offline progress).
-- Phase 4: economy - coins from care actions, egg shop, hatch flow, collection journal, 3 pets.
-- Phase 5: progression - XP, levels, 2 upgrade tiers, all in src/data/config.js.
-- Phase 6 (optional): PWA (manifest + service worker), more species, achievements.
+- CI (automatic on push): node --check syntax gate on all .js files.
+- Local run: any static server (python3 -m http.server). file:// will not load ES modules.
+
+## Environment constraints (verified)
+
+- GitHub App cannot create repos (403) - owner creates repos manually.
+- No tool to enable GitHub Pages - owner manual step: Settings -> Pages -> main branch.
+- Sandbox testing recipe: strip import lines + export prefixes, then new Function(deps, body + return object). Works for pure-logic modules only.
+
+## Milestones
+
+- Phase 0 (commit afd498a, CI #1 passed): skeleton + CI.
+- Phases 1-3: bus/FSM/config, stats+actions+saves, scene+pet. 21/21 sandbox logic tests passed pre-push.
+
+## Known limitations
+
+- Coins are displayed and saved but not spent yet (economy arrives with egg shop in Phase 4).
+- No browser/device test yet - logic verified headless only; Three.js rendering unverified on a real device.
+- Only one pet species (procedural). Hatch flow not built yet.
+
+## Next steps
+
+- Phase 4: egg shop (spend coins), hatch flow with timed egg, collection journal, 3 species.
+- Phase 5: XP/levels/upgrades.
+- Phase 6 (optional): PWA manifest + service worker.

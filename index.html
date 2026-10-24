@@ -1,26 +1,55 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <meta name="theme-color" content="#9fd8ff" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#87ceeb">
+  <meta name="description" content="PetVerse Simulator - a mobile-first 3D virtual pet browser game.">
   <title>PetVerse Simulator</title>
-  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="styles.css">
   <script type="importmap">
   {
     "imports": {
-      "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js"
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
     }
   }
   </script>
 </head>
 <body>
-  <div id="app">
-    <div id="canvas-wrap"></div>
-    <div id="hud">
-      <div class="chip" id="hud-coins">Coins: 0</div>
+  <canvas id="scene"></canvas>
+
+  <div id="hud">
+    <div id="topbar">
+      <div id="brand">PetVerse</div>
+      <div id="coin-chip"><span id="coins">0</span> coins</div>
+    </div>
+
+    <div id="bottom-stack">
+      <div id="stat-panel">
+        <div class="stat">
+          <span class="stat-label">Hunger</span>
+          <div class="bar"><div class="bar-fill hunger" id="bar-hunger"></div></div>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Happiness</span>
+          <div class="bar"><div class="bar-fill happiness" id="bar-happiness"></div></div>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Energy</span>
+          <div class="bar"><div class="bar-fill energy" id="bar-energy"></div></div>
+        </div>
+      </div>
+
+      <div id="action-bar">
+        <button id="btn-feed">Feed</button>
+        <button id="btn-play">Play</button>
+        <button id="btn-clean">Clean</button>
+      </div>
+
+      <div id="toasts"></div>
     </div>
   </div>
-  <script type="module" src="./src/main.js"></script>
+
+  <script type="module" src="src/main.js"></script>
 </body>
 </html>

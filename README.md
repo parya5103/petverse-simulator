@@ -1,49 +1,43 @@
 # PetVerse Simulator
 
-Mobile-first 3D virtual pet game for the browser. Coins, collectible pets, egg hatching, upgrades, shop, progression, and local saves.
+A mobile-first 3D virtual pet browser game. Feed, play with, and clean your pet; watch it hop around a small procedural 3D world. Built with vanilla ES modules and Three.js - zero build step, zero dependencies, zero cost.
 
-- Zero build step: Three.js loaded via CDN import map (no npm dependencies, no bundler).
-- Mobile-first: tap/pointer controls, safe-area aware HUD, capped pixel ratio for Android performance.
-- Free hosting: GitHub Pages.
+## Status
 
-## Play
+- Phase 0: project skeleton, CI syntax gate (done)
+- Phase 1: event bus, FSM, central config (done)
+- Phase 2: pet stats with offline decay, Feed/Play/Clean actions, versioned local saves with backup (done)
+- Phase 3: Three.js scene with drag-to-orbit camera, procedural pet with hop animation (done)
+- Phase 4 (next): egg shop, hatching, collection journal, multiple species
+- Phase 5: XP, levels, upgrades
+- Phase 6 (optional): PWA offline support
 
-https://parya5103.github.io/petverse-simulator/
+## Tech
+
+- Three.js 0.160 loaded from a CDN import map (no npm install, no bundler)
+- Vanilla ES modules, no framework
+- localStorage saves: versioned envelope `{version, timestamp, state}` with a backup copy
+- Stats decay in real time (hunger 4/h, happiness 3/h, energy 2/h), applied on load for offline progress
+- Pointer events for touch + mouse (drag anywhere to orbit the camera)
 
 ## Run locally
 
-ES modules require a local server (opening index.html via file:// will not work):
+ES modules require an HTTP server (opening index.html directly from file:// will not work):
 
-    python3 -m http.server 8642
-    # or: npx serve .
+    python3 -m http.server 8000
 
-Then open http://localhost:8642
+then open http://localhost:8000. Any other static file server works too.
 
-## Structure
+## Deployment
 
-    index.html            entry point + HUD + import map
-    styles.css            mobile-first UI styling
-    src/main.js           scene bootstrap, placeholder pet, tap interaction
-    KNOWLEDGE.md          project knowledge base (read first)
-    AGENTS.md             rules for AI coding agents
+Free static hosting: GitHub Pages. In the repo: Settings -> Pages -> Deploy from a branch -> main -> Save. The site then lives at:
 
-Planned: src/data/ (config tables), src/state/ (save/load), src/gameplay/ (actions, economy).
+    https://<user>.github.io/petverse-simulator/
 
-## CI
+## Testing
 
-Every push runs a syntax check on all ES modules (.github/workflows/ci.yml).
+CI runs `node --check` on every .js file (syntax gate) on each push and pull request. Pure game logic (stats math, save system, event bus, FSM) is written dependency-free so it can be tested without a browser.
 
-## Roadmap
+## License
 
-- Phase 0: skeleton + deploy (done)
-- Phase 1: core shell (camera rig, FSM, event bus)
-- Phase 2: pet stats (hunger, happiness, energy), feed/play/clean actions
-- Phase 3: SaveManager (versioned localStorage saves, offline progress)
-- Phase 4: coins, egg shop, hatching, collection
-- Phase 5: upgrades, XP, levels (config-driven)
-- Phase 6 (optional): PWA install, more species, achievements
-
-## Credits
-
-- Built with three.js (MIT).
-- Architecture reference: TIDELINE (MIT) - github.com/bridge-mind/tideline
+All code in this repository is original. Third-party assets (if added later) must be CC0 or credited in CREDITS.md.
