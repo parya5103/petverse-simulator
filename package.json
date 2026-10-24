@@ -1,0 +1,7 @@
+{
+  "name": "petverse-simulator",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Mobile-first 3D virtual pet game for the browser. Three.js via CDN, zero build step."
+}
