@@ -37,3 +37,10 @@ export function applyOffline(stats, lastTimestamp, nowMs) {
   const hours = Math.max(0, (nowMs - lastTimestamp) / 3600000);
   return applyDecay(stats, hours);
 }
+
+// Starseed Light progress: clamped accumulation, capped at max.
+export function addStarseedLight(current, gain) {
+  const c = (typeof current === 'number' && Number.isFinite(current)) ? Math.max(0, current) : 0;
+  const g = (typeof gain === 'number' && Number.isFinite(gain)) ? gain : 0;
+  return Math.min(CONFIG.starseed.max, c + g);
+}

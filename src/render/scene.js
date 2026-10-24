@@ -1,8 +1,9 @@
 // Three.js scene with a drag-to-orbit camera rig.
-// Kept small for low-end Android: 2 lights, 1 ground mesh, pixel ratio cap.
+// Kept small for low-end Android: few lights, few meshes, pixel ratio cap.
 
 import * as THREE from 'three';
 import { CONFIG } from '../data/config.js';
+import { createIsland } from './island.js';
 
 export function createScene(canvas) {
   const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
@@ -36,8 +37,10 @@ export function createScene(canvas) {
     camera.lookAt(target);
   }
 
-  scene.add(new THREE.AmbientLight(0xffffff, 0.7));
-  const sun = new THREE.DirectionalLight(0xfff3d6, 1.1);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+  const hemi = new THREE.HemisphereLight(0xbfe3ff, 0x6fbf73, 0.5);
+  scene.add(hemi);
+  const sun = new THREE.DirectionalLight(0xfff3d6, 1.0);
   sun.position.set(4, 7, 3);
   scene.add(sun);
 
@@ -47,6 +50,17 @@ export function createScene(canvas) {
   );
   ground.position.y = -0.2;
   scene.add(ground);
+
+  // water disc floating far below the island
+  const water = new THREE.Mesh(
+    new THREE.CylinderGeometry(13, 13, 0.25, 32),
+    new THREE.MeshStandardMaterial({ color: 0x3f8fc4, roughness: 0.35 })
+  );
+  water.position.y = -1.6;
+  scene.add(water);
+
+  // Starter Sanctuary: shrine crystal, bobbing rocks, light motes
+  const island = createIsland(scene);
 
   // drag-to-orbit input (pointer events cover touch + mouse)
   let dragging = false;
@@ -95,5 +109,5 @@ export function createScene(canvas) {
     renderer.dispose();
   }
 
-  return { scene: scene, camera: camera, renderer: renderer, rig: rig, target: target, resize: resize, render: render, dispose: dispose };
+  return { scene: scene, camera: camera, renderer: renderer, rig: rig, target: target, island: island, resize: resize, render: render, dispose: dispose };
 }

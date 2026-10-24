@@ -36,7 +36,7 @@ export function createSave(storage) {
       return {
         version: env.version,
         timestamp: env.timestamp,
-        state: { coins: env.state.coins, stats: Object.assign({}, stats) },
+        state: Object.assign({}, env.state),
         loadedFrom: order[i],
         offlineMs: Math.max(0, ts - env.timestamp)
       };
