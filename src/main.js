@@ -5,13 +5,18 @@ import { CONFIG } from './data/config.js';
 import { createBus } from './core/bus.js';
 import { createFsm } from './state/fsm.js';
 import { createStats, applyEffects, applyOffline, addStarseedLight } from './gameplay/petStats.js';
+import { levelFromXp, applyXp } from './gameplay/progression.js';
+import { canBuyEgg, buyEgg, readyEggs, hatchEgg } from './gameplay/eggs.js';
 import { createSave } from './state/save.js';
 import { normalizeState, missingSettings } from './state/migrations.js';
 import { createScene } from './render/scene.js';
 import { createPet } from './render/pet.js';
+import { createEggs } from './render/egg.js';
 import { createAudio } from './core/audio.js';
 import { createFtue } from './ui/ftue.js';
 import { createFeedback } from './ui/feedback.js';
+import { createEggShop } from './ui/eggShop.js';
+import { createCollection } from './ui/collection.js';
 
 // ---- event bus + state machine ----
 const bus = createBus();
@@ -37,6 +42,8 @@ if (loaded) {
 // ---- ui refs ----
 const els = {
   coins: document.getElementById('coins'),
+  coinChip: document.getElementById('coin-chip'),
+  level: document.getElementById('level'),
   lightFill: document.getElementById('light-fill'),
   lightPct: document.getElementById('light-pct'),
   bars: {
@@ -48,6 +55,11 @@ const els = {
     feed: document.getElementById('btn-feed'),
     play: document.getElementById('btn-play'),
     clean: document.getElementById('btn-clean')
+  },
+  nav: {
+    shop: document.getElementById('btn-shop'),
+    pets: document.getElementById('btn-pets'),
+    islands: document.getElementById('btn-islands')
   },
   toasts: document.getElementById('toasts'),
   btnSettings: document.getElementById('btn-settings'),
@@ -67,9 +79,16 @@ function renderUi() {
     else el.classList.remove('low');
   }
   els.coins.textContent = String(Math.floor(state.coins));
+  els.level.textContent = String(levelFromXp(state.xp));
   const pct = Math.round((state.starseedLight / CONFIG.starseed.max) * 100);
   els.lightFill.style.width = pct + '%';
   els.lightPct.textContent = pct + '%';
+}
+
+function coinPop() {
+  els.coinChip.classList.remove('pop');
+  void els.coinChip.offsetWidth; // restart the CSS animation
+  els.coinChip.classList.add('pop');
 }
 
 function toast(msg) {
@@ -87,8 +106,15 @@ function toast(msg) {
 // ---- rendering ----
 const canvas = document.getElementById('scene');
 const view = createScene(canvas);
-const pet = createPet(view.scene, bus);
 const island = view.island;
+let pet = createPet(view.scene, bus, state.activeSpecies);
+const eggsView = createEggs(view.scene);
+
+function setPet(speciesId) {
+  pet.dispose();
+  pet = createPet(view.scene, bus, speciesId);
+  pet.setReducedMotion(state.settings.reducedMotion);
+}
 
 let last = performance.now();
 function tick(now) {
@@ -96,6 +122,9 @@ function tick(now) {
   last = now;
   pet.update(dt, now / 1000);
   island.update(dt, now / 1000, state.settings.reducedMotion);
+  eggsView.sync(state.eggs, now);
+  eggsView.update(dt, now / 1000, state.settings.reducedMotion);
+  tryHatch(now);
   view.render();
   requestAnimationFrame(tick);
 }
@@ -156,6 +185,16 @@ function doAction(name) {
   state.starseedLight = addStarseedLight(state.starseedLight, CONFIG.starseed.lightPerAction);
   island.setGlow(state.starseedLight / CONFIG.starseed.max);
 
+  // xp + level-ups
+  const prog = applyXp(state.xp, CONFIG.xp.perAction);
+  state.xp = prog.xp;
+  if (prog.levels > 0) {
+    state.coins += prog.coins;
+    toast('Level ' + prog.level + '! +' + prog.coins + ' coins');
+    audio.play('levelup');
+    coinPop();
+  }
+
   audio.play(name);
   feedback.pop('+' + CONFIG.starseed.lightPerAction + ' Light', 'light');
 
@@ -172,6 +211,77 @@ function doAction(name) {
 els.buttons.feed.addEventListener('click', function () { doAction('feed'); });
 els.buttons.play.addEventListener('click', function () { doAction('play'); });
 els.buttons.clean.addEventListener('click', function () { doAction('clean'); });
+
+// ---- egg shop + hatching ----
+const eggShop = createEggShop({
+  onBuy: function (kindKey) {
+    const result = buyEgg(state, kindKey, Date.now());
+    if (!result) {
+      const kind = CONFIG.eggs.kinds[kindKey];
+      if (state.coins < kind.cost) toast('Not enough coins');
+      else if (state.eggs.length >= CONFIG.eggs.maxEggs) toast('Nest is full - hatch an egg first');
+      audio.play('ui');
+      return;
+    }
+    state.coins = result.coins;
+    state.eggs = result.eggs;
+    audio.play('ui');
+    coinPop();
+    toast(CONFIG.eggs.kinds[kindKey].label + ' is incubating');
+    eggShop.refresh(state);
+    renderUi();
+    doSave();
+  }
+});
+
+function tryHatch(nowMs) {
+  if (state.eggs.length === 0) return;
+  const ready = readyEggs(state.eggs, nowMs);
+  if (ready.length === 0) return;
+  const result = hatchEgg(state, ready[0], nowMs);
+  if (!result) return;
+  state.eggs = result.eggs;
+  state.collection = result.collection;
+  state.starseedLight = result.starseedLight;
+  island.setGlow(state.starseedLight / CONFIG.starseed.max);
+  const sp = CONFIG.species[result.hatched];
+  audio.play('hatch');
+  feedback.pop('+' + result.lightBonus + ' Light', 'light');
+  toast(result.isNewSpecies
+    ? 'New spirit hatched: ' + sp.name + '!'
+    : sp.name + ' hatched!');
+  if (result.isNewSpecies) feedback.pop('New spirit: ' + sp.name, 'star');
+  renderUi();
+  doSave();
+}
+
+// ---- collection journal ----
+const collection = createCollection({
+  onSetActive: function (speciesId) {
+    if (speciesId === state.activeSpecies) return;
+    if (!(state.collection[speciesId] > 0)) return;
+    state.activeSpecies = speciesId;
+    setPet(speciesId);
+    pet.react('play');
+    audio.play('ui');
+    toast(CONFIG.species[speciesId].name + ' is now your active spirit');
+    collection.refresh(state);
+    doSave();
+  }
+});
+
+// ---- navigation ----
+els.nav.shop.addEventListener('click', function () {
+  audio.play('ui');
+  eggShop.open(state);
+});
+els.nav.pets.addEventListener('click', function () {
+  audio.play('ui');
+  collection.open(state);
+});
+els.nav.islands.addEventListener('click', function () {
+  toast('Islands awaken in a future update');
+});
 
 // ---- first-time intro ("The Lost Starseed") ----
 const ftue = createFtue();
@@ -202,6 +312,13 @@ document.addEventListener('visibilitychange', function () {
   if (document.hidden) doSave();
 });
 window.addEventListener('pagehide', doSave);
+
+// ---- PWA (optional offline support) ----
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('./sw.js').catch(function () { /* offline is optional */ });
+  });
+}
 
 // ---- boot ----
 island.setGlow(state.starseedLight / CONFIG.starseed.max);

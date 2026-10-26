@@ -6,6 +6,8 @@
   <meta name="theme-color" content="#87ceeb">
   <meta name="description" content="PetVerse: The Lost Starseed - a mobile-first 3D virtual pet browser game. Restore the island's glow.">
   <title>PetVerse: The Lost Starseed</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="styles.css">
   <script type="importmap">
   {
@@ -22,6 +24,7 @@
     <div id="topbar">
       <div id="brand">PetVerse</div>
       <div id="topbar-right">
+        <div id="level-chip">Lv <span id="level">1</span></div>
         <div id="light-chip">
           <span id="light-label">Light</span>
           <div id="light-bar"><div id="light-fill"></div></div>
@@ -56,6 +59,12 @@
         </div>
       </div>
 
+      <div id="nav-bar">
+        <button id="btn-shop">Egg Shop</button>
+        <button id="btn-pets">Spirits</button>
+        <button id="btn-islands">Islands</button>
+      </div>
+
       <div id="action-bar">
         <button id="btn-feed">Feed</button>
         <button id="btn-play">Play</button>
@@ -66,12 +75,28 @@
     </div>
   </div>
 
-  <div id="settings-sheet" hidden>
-    <div id="settings-card">
+  <div id="settings-sheet" class="sheet" hidden>
+    <div id="settings-card" class="sheet-card">
       <h2>Settings</h2>
       <button id="toggle-mute">Sound: On</button>
       <button id="toggle-reduced">Reduced Motion: Off</button>
-      <button id="btn-close-settings">Close</button>
+      <button id="btn-close-settings" class="sheet-close">Close</button>
+    </div>
+  </div>
+
+  <div id="shop-sheet" class="sheet" hidden>
+    <div id="shop-card" class="sheet-card">
+      <h2>Egg Shop</h2>
+      <div id="shop-cards"></div>
+      <button id="btn-close-shop" class="sheet-close">Close</button>
+    </div>
+  </div>
+
+  <div id="pets-sheet" class="sheet" hidden>
+    <div id="pets-card" class="sheet-card">
+      <h2>Spirit Collection</h2>
+      <div id="pets-cards"></div>
+      <button id="btn-close-pets" class="sheet-close">Close</button>
     </div>
   </div>
 

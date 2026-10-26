@@ -1,0 +1,14 @@
+{
+  "name": "PetVerse: The Lost Starseed",
+  "short_name": "PetVerse",
+  "description": "Restore the glow of the floating islands. Feed, play, clean, hatch and collect spirit pets.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#87ceeb",
+  "theme_color": "#87ceeb",
+  "icons": [
+    { "src": "./icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

@@ -10,6 +10,7 @@
   --text-dim: rgba(255, 255, 255, 0.72);
   --gold: #ffd700;
   --light: #9ad7ff;
+  --star: #fff2b0;
   --hunger: #ff8c42;
   --happy: #ffd700;
   --energy: #5bc0eb;
@@ -70,8 +71,22 @@ html, body {
 
 #topbar-right {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+}
+
+#level-chip {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  color: var(--star);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 10px;
+  border-radius: var(--radius-pill);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 #light-chip {
@@ -128,6 +143,16 @@ html, body {
   -webkit-backdrop-filter: blur(8px);
 }
 
+#coin-chip.pop {
+  animation: coin-pop 0.35s ease-out;
+}
+
+@keyframes coin-pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.18); }
+  100% { transform: scale(1); }
+}
+
 #btn-settings {
   pointer-events: auto;
   width: var(--tap);
@@ -150,7 +175,7 @@ html, body {
 #bottom-stack {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 #feedback-layer {
@@ -172,6 +197,8 @@ html, body {
   pointer-events: none;
   white-space: nowrap;
 }
+
+.feedback.star { color: var(--star); }
 
 @keyframes feedback-rise {
   0% { opacity: 0; bottom: 0; }
@@ -235,6 +262,31 @@ html, body {
   50% { opacity: 0.45; }
 }
 
+/* ---- navigation bar ---- */
+
+#nav-bar {
+  display: flex;
+  gap: 8px;
+}
+
+#nav-bar button {
+  pointer-events: auto;
+  flex: 1;
+  min-height: 40px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-dim);
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+#nav-bar button:active { background: var(--glass-strong); color: var(--text); }
+
+/* ---- action dock ---- */
+
 #action-bar {
   display: flex;
   gap: 10px;
@@ -283,9 +335,9 @@ html, body {
   transform: translateY(0);
 }
 
-/* ---- settings sheet ---- */
+/* ---- bottom sheets (shared) ---- */
 
-#settings-sheet {
+.sheet {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.35);
@@ -296,9 +348,11 @@ html, body {
   padding: 0 12px calc(16px + env(safe-area-inset-bottom));
 }
 
-#settings-card {
+.sheet-card {
   width: 100%;
   max-width: 420px;
+  max-height: 70vh;
+  overflow-y: auto;
   background: var(--glass-strong);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
@@ -310,13 +364,13 @@ html, body {
   gap: 10px;
 }
 
-#settings-card h2 {
+.sheet-card h2 {
   font-size: 17px;
   color: var(--text);
   margin-bottom: 4px;
 }
 
-#settings-card button {
+.sheet-card button {
   pointer-events: auto;
   min-height: 48px;
   font-size: 15px;
@@ -327,9 +381,54 @@ html, body {
   border-radius: var(--radius-md);
 }
 
-#settings-card button:active { background: rgba(255, 255, 255, 0.2); }
+.sheet-card button:active { background: rgba(255, 255, 255, 0.2); }
+.sheet-card button:disabled { opacity: 0.4; }
 
-#btn-close-settings { color: var(--text-dim); }
+.sheet-card .sheet-close { color: var(--text-dim); }
+
+/* shop + collection cards */
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  padding: 12px;
+}
+
+.card.locked { opacity: 0.45; }
+
+.card-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.card-sub {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.card-count {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--star);
+}
+
+.card button {
+  margin-top: 6px;
+  min-height: 44px;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--sky);
+  background: var(--light);
+  border: none;
+  border-radius: var(--radius-md);
+}
+
+.card button:disabled { opacity: 0.35; }
+.card button:active { opacity: 0.8; }
 
 /* ---- intro overlay ---- */
 
@@ -410,12 +509,13 @@ html, body {
 /* ---- reduced motion ---- */
 
 @media (prefers-reduced-motion: reduce) {
-  .bar-fill, .bar-fill.low, .feedback, .toast { animation: none; transition: none; }
+  .bar-fill, .bar-fill.low, .feedback, .toast, #coin-chip.pop { animation: none; transition: none; }
   #light-fill { transition: none; }
 }
 
 body.reduced-motion .bar-fill,
 body.reduced-motion .bar-fill.low,
 body.reduced-motion .feedback,
-body.reduced-motion .toast { animation: none; transition: none; }
+body.reduced-motion .toast,
+body.reduced-motion #coin-chip.pop { animation: none; transition: none; }
 body.reduced-motion #light-fill { transition: none; }
